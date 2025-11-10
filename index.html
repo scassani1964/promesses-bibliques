@@ -1259,92 +1259,77 @@ document.addEventListener('keydown', function(event) {
     }
 });
     </script>
+</body>
+<!-- SCRIPT DE SCROLL VERS LE HAUT DE LA CATEGORIE -->
+<!-- À ajouter JUSTE AVANT </body> -->
 
-    <!-- ========================================
-         SCRIPT DE SCROLL AUTOMATIQUE
-         Scroll vers la catégorie quand on clique
-         ======================================== -->
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log('Script de scroll automatique chargé');
+<script>
+// Fonction pour scroller vers un élément spécifique
+function scrollToElement(element) {
+    if (!element) return;
+    
+    // Position de l'élément + 100px de marge en haut
+    const elementPosition = element.getBoundingClientRect().top + window.pageYOffset;
+    const offsetPosition = elementPosition - 100;
+    
+    window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+    });
+    
+    console.log('✅ Scroll vers la catégorie');
+}
+
+// Écouter tous les clics sur la page
+document.addEventListener('click', function(e) {
+    const clickedElement = e.target;
+    
+    // Attendre que le contenu s'ouvre (300ms)
+    setTimeout(function() {
+        // Chercher le prochain élément visible après le bouton cliqué
+        let nextElement = clickedElement.nextElementSibling;
         
-        // Fonction pour scroller vers un élément
-        function scrollToElement(element) {
-            if (!element) return;
+        // Parcourir les éléments suivants pour trouver celui qui est visible
+        while (nextElement) {
+            const style = window.getComputedStyle(nextElement);
             
-            // Calculer la position avec un offset de 100px du haut
-            const yOffset = -100;
-            const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
+            // Si l'élément est visible et a du contenu
+            if (style.display !== 'none' && 
+                style.visibility !== 'hidden' && 
+                nextElement.offsetHeight > 0) {
+                
+                // Scroll vers cet élément !
+                scrollToElement(nextElement);
+                break;
+            }
             
-            // Scroll smooth
-            window.scrollTo({
-                top: y,
-                behavior: 'smooth'
-            });
-            
-            console.log('Scroll vers:', element.id || element.className);
+            nextElement = nextElement.nextElementSibling;
         }
         
-        // Observer les changements dans le DOM
-        const observer = new MutationObserver(function(mutations) {
-            mutations.forEach(function(mutation) {
-                if (mutation.type === 'attributes' && 
-                    (mutation.attributeName === 'style' || mutation.attributeName === 'class')) {
-                    const target = mutation.target;
-                    if (target.style.display !== 'none' && 
-                        (target.classList.contains('category') || 
-                         target.classList.contains('categoria') ||
-                         target.id.includes('cat'))) {
-                        setTimeout(() => scrollToElement(target), 150);
-                    }
-                }
-            });
-        });
-        
-        // Observer tout le body
-        observer.observe(document.body, {
-            childList: true,
-            subtree: true,
-            attributes: true,
-            attributeFilter: ['style', 'class']
-        });
-        
-        // Écouter les clics
-        document.body.addEventListener('click', function(e) {
-            const clickedElement = e.target;
+        // Si rien trouvé dans les siblings, chercher dans le parent
+        if (!nextElement && clickedElement.parentElement) {
+            const parent = clickedElement.parentElement;
+            let child = parent.firstElementChild;
             
-            if (clickedElement.tagName === 'BUTTON' || 
-                clickedElement.classList.contains('category-btn')) {
+            while (child) {
+                const style = window.getComputedStyle(child);
                 
-                setTimeout(function() {
-                    let categoryElement = null;
+                if (child !== clickedElement &&
+                    style.display !== 'none' && 
+                    style.visibility !== 'hidden' && 
+                    child.offsetHeight > 0) {
                     
-                    // Chercher par ID si onclick présent
-                    const onclickAttr = clickedElement.getAttribute('onclick');
-                    if (onclickAttr) {
-                        const match = onclickAttr.match(/['"]([^'"]+)['"]/);
-                        if (match) {
-                            categoryElement = document.getElementById(match[1]);
-                        }
-                    }
-                    
-                    // Chercher le prochain élément sibling
-                    if (!categoryElement) {
-                        categoryElement = clickedElement.nextElementSibling;
-                        while (categoryElement && categoryElement.style.display === 'none') {
-                            categoryElement = categoryElement.nextElementSibling;
-                        }
-                    }
-                    
-                    if (categoryElement) {
-                        scrollToElement(categoryElement);
-                    }
-                }, 200);
+                    scrollToElement(child);
+                    break;
+                }
+                
+                child = child.nextElementSibling;
             }
-        });
-        
-        console.log('Observateur de scroll activé');
-    });
-    </script>
+        }
+    }, 300);
+});
+
+console.log('✅ Scroll automatique activé - vers le haut');
+</script>
 </body>
 </html>
